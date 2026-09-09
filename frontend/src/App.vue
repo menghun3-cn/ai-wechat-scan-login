@@ -119,38 +119,43 @@ onBeforeUnmount(stopTimers)
 <template>
   <!-- 登录视图 -->
   <div v-if="state !== 'home'" class="card">
-    <div class="card-header">
-      <div class="logo">💬</div>
-      <h1>微信扫码登录</h1>
-      <p class="subtitle">使用微信扫一扫关注公众号，发送短码即可登录</p>
-    </div>
+    <div class="card-body">
+      <div class="col-left">
+        <div class="logo">💬</div>
+        <h1>微信扫码登录</h1>
+        <p class="subtitle">扫码关注公众号，回复短码登录</p>
+        <div class="qr-wrap">
+          <img v-if="state !== 'loading' && state !== 'error'" :src="QR_IMAGE" alt="公众号二维码" class="qr" />
+          <div v-else class="qr-placeholder">{{ state === 'loading' ? '加载中…' : '二维码加载失败' }}</div>
+          <div v-if="state === 'confirmed'" class="qr-mask confirmed-mask">
+            <div class="mask-icon">✓</div>
+            <div>登录成功</div>
+          </div>
+        </div>
+      </div>
 
-    <div class="qr-wrap">
-      <img v-if="state !== 'loading' && state !== 'error'" :src="QR_IMAGE" alt="公众号二维码" class="qr" />
-      <div v-else class="qr-placeholder">{{ state === 'loading' ? '加载中…' : '二维码加载失败' }}</div>
-      <div v-if="state === 'confirmed'" class="qr-mask confirmed-mask">
-        <div class="mask-icon">✓</div>
-        <div>登录成功</div>
+      <div class="divider"></div>
+
+      <div class="col-right">
+        <div class="code-box" :class="{ disabled: state !== 'ready' }">
+          <span class="code-label">回复短码</span>
+          <span class="code-value">{{ state === 'ready' ? formatCode(login.code) : '· · · · · ·' }}</span>
+          <span v-if="state === 'ready'" class="countdown">{{ formatCountdown(secondsLeft) }}</span>
+        </div>
+
+        <ol class="steps">
+          <li>打开微信，扫描左侧二维码关注公众号</li>
+          <li>在公众号对话框发送上方 <b>6 位数字短码</b></li>
+          <li>公众号回复“登录成功”后自动进入系统</li>
+        </ol>
+
+        <p v-if="message" class="message" :class="state">{{ message }}</p>
+
+        <button v-if="state === 'expired' || state === 'error'" class="refresh-btn" @click="createLogin">
+          刷新重试
+        </button>
       </div>
     </div>
-
-    <div class="code-box" :class="{ disabled: state !== 'ready' }">
-      <span class="code-label">回复短码</span>
-      <span class="code-value">{{ state === 'ready' ? formatCode(login.code) : '· · · · · ·' }}</span>
-      <span v-if="state === 'ready'" class="countdown">{{ formatCountdown(secondsLeft) }}</span>
-    </div>
-
-    <ol class="steps">
-      <li>打开微信，扫描左侧二维码关注公众号</li>
-      <li>在公众号对话框发送上方 <b>6 位数字短码</b></li>
-      <li>公众号回复“登录成功”后，本页将自动进入系统</li>
-    </ol>
-
-    <p v-if="message" class="message" :class="state">{{ message }}</p>
-
-    <button v-if="state === 'expired' || state === 'error'" class="refresh-btn" @click="createLogin">
-      刷新重试
-    </button>
   </div>
 
   <!-- 首页（登录成功后） -->
@@ -182,40 +187,59 @@ onBeforeUnmount(stopTimers)
 
 <style scoped>
 .card {
-  width: 380px;
+  width: min(620px, 94vw);
+  max-height: calc(100dvh - 24px);
   background: #fff;
   border-radius: 16px;
-  padding: 36px 32px;
+  padding: clamp(16px, 3vh, 28px) clamp(18px, 3.5vw, 30px);
   box-shadow: 0 12px 40px rgba(31, 56, 88, 0.12);
+  display: flex;
+}
+
+.card-body {
+  flex: 1;
+  display: flex;
+  align-items: stretch;
+  gap: clamp(16px, 3vw, 26px);
+  min-height: 0;
+}
+
+.col-left {
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   text-align: center;
 }
 
-.card-header .logo {
-  font-size: 44px;
+.logo {
+  font-size: clamp(26px, 4.5vh, 36px);
   line-height: 1;
 }
 
-.card-header h1 {
-  margin-top: 10px;
-  font-size: 22px;
+.col-left h1 {
+  margin-top: 6px;
+  font-size: clamp(16px, 2.8vh, 20px);
   color: #1f3858;
+  white-space: nowrap;
 }
 
 .subtitle {
-  margin-top: 6px;
-  font-size: 13px;
+  margin-top: 4px;
+  font-size: clamp(11px, 1.8vh, 13px);
   color: #8a97a8;
-  line-height: 1.5;
+  white-space: nowrap;
 }
 
 .qr-wrap {
   position: relative;
-  width: 200px;
-  height: 200px;
-  margin: 22px auto 0;
+  width: clamp(140px, 24vh, 190px);
+  height: clamp(140px, 24vh, 190px);
+  margin-top: clamp(10px, 2vh, 16px);
   border: 1px solid #e4e9f0;
   border-radius: 12px;
   overflow: hidden;
+  flex-shrink: 0;
 }
 
 .qr {
@@ -254,22 +278,37 @@ onBeforeUnmount(stopTimers)
 }
 
 .mask-icon {
-  width: 48px;
-  height: 48px;
+  width: clamp(36px, 6vh, 48px);
+  height: clamp(36px, 6vh, 48px);
   border-radius: 50%;
   background: #fff;
   color: #12b76a;
-  font-size: 28px;
-  line-height: 48px;
+  font-size: clamp(22px, 3.5vh, 28px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.divider {
+  width: 1px;
+  background: #eef2f7;
+  flex: 0 0 auto;
+}
+
+.col-right {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
 }
 
 .code-box {
-  margin-top: 20px;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 10px;
-  padding: 12px 16px;
+  padding: clamp(8px, 1.5vh, 12px) 16px;
   background: #f4f7fb;
   border-radius: 10px;
 }
@@ -279,12 +318,12 @@ onBeforeUnmount(stopTimers)
 }
 
 .code-label {
-  font-size: 13px;
+  font-size: clamp(12px, 1.8vh, 13px);
   color: #66788f;
 }
 
 .code-value {
-  font-size: 26px;
+  font-size: clamp(20px, 3.6vh, 26px);
   font-weight: 700;
   letter-spacing: 4px;
   color: #1d6ff2;
@@ -292,24 +331,24 @@ onBeforeUnmount(stopTimers)
 }
 
 .countdown {
-  font-size: 13px;
+  font-size: clamp(12px, 1.8vh, 13px);
   color: #98a5b5;
   min-width: 38px;
   text-align: left;
 }
 
 .steps {
-  margin: 18px 0 0;
+  margin-top: clamp(10px, 2vh, 18px);
   padding-left: 20px;
   text-align: left;
   color: #5b6b80;
-  font-size: 13px;
-  line-height: 1.9;
+  font-size: clamp(12px, 1.9vh, 13px);
+  line-height: clamp(1.6, 2.2vh, 1.9);
 }
 
 .message {
-  margin-top: 14px;
-  font-size: 14px;
+  margin-top: clamp(8px, 1.6vh, 14px);
+  font-size: clamp(13px, 2vh, 14px);
 }
 
 .message.confirmed {
@@ -322,10 +361,10 @@ onBeforeUnmount(stopTimers)
 }
 
 .refresh-btn {
-  margin-top: 16px;
+  margin-top: clamp(10px, 1.8vh, 16px);
   width: 100%;
-  padding: 10px 0;
-  font-size: 15px;
+  padding: clamp(8px, 1.4vh, 10px) 0;
+  font-size: clamp(13px, 2vh, 15px);
   color: #fff;
   background: #1d6ff2;
   border: none;
@@ -336,6 +375,41 @@ onBeforeUnmount(stopTimers)
 
 .refresh-btn:hover {
   background: #1559c4;
+}
+
+/* 窄屏（手机竖屏）：回退为纵向单列，二维码居中 */
+@media (max-width: 560px) {
+  .card {
+    width: min(380px, 94vw);
+  }
+
+  .card-body {
+    flex-direction: column;
+    gap: clamp(10px, 2vh, 16px);
+  }
+
+  .divider {
+    display: none;
+  }
+
+  .col-right {
+    width: 100%;
+  }
+
+  .code-box {
+    width: 100%;
+  }
+}
+
+/* 极矮视口（横屏笔记本小窗口）：进一步压缩非关键元素 */
+@media (max-height: 560px) {
+  .steps {
+    display: none;
+  }
+
+  .logo {
+    display: none;
+  }
 }
 
 @keyframes fade-in {
@@ -349,16 +423,18 @@ onBeforeUnmount(stopTimers)
 
 /* ---------- 首页（登录成功后） ---------- */
 .home {
-  width: 380px;
+  width: min(380px, 94vw);
 }
 
 .home-card {
   background: #fff;
   border-radius: 16px;
-  padding: 40px 32px;
+  padding: clamp(24px, 4vh, 40px) clamp(22px, 4vw, 32px);
   box-shadow: 0 12px 40px rgba(31, 56, 88, 0.12);
   text-align: center;
   animation: fade-in 0.3s ease;
+  max-height: calc(100dvh - 24px);
+  overflow-y: auto;
 }
 
 .avatar {
