@@ -1,0 +1,28 @@
+# 依赖与构建产物
+node_modules/
+dist/
+build/
+*.jar
+
+# 日志
+*.log
+
+# 打包临时文件
+*.tar.gz
+
+# 密钥与敏感信息（token/key 一律不入库）
+token.key
+*.token
+*.token.env
+
+# 服务器 nginx 配置（含内网 IP 等部署信息，仅本地留档）
+wechat-scan.conf
+
+# 实现方案文章（仅本地留档，不入库）
+docs/个人公众号扫码登录实现方案.md
+
+# IDE
+.idea/
+.vscode/
+*.iml
+.DS_Store
